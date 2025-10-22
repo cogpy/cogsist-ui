@@ -60,7 +60,7 @@ export function AtomeseDisplay({
           <span className="text-gray-500 text-sm">{tvDisplay}</span>
         </div>
         <div className="ml-4 border-l border-gray-300 pl-2">
-          {atom.outgoing.map((child, index) => (
+          {atom.outgoing.map((child: AtomeseAtom, index: number) => (
             <div key={`${key}-${index}`}>
               {renderAtom(child, depth + 1)}
             </div>

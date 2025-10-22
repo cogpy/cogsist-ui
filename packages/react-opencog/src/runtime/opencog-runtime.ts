@@ -1,16 +1,9 @@
-import { 
-  AssistantRuntime, 
-  type ThreadMessage,
-  type AssistantMessage,
-  type UserMessage,
-  type Unsubscribe,
-  type ThreadRuntimeCore
-} from "@assistant-ui/react";
+import type { AssistantRuntime, ThreadRuntime, ThreadMessage, Unsubscribe } from "@assistant-ui/react";
 import { CogServerClient } from "./cogserver-client";
 import { BiDirectionalTranslationService } from "./translation-service";
 import { OpenCogRuntimeConfig, OpenCogMessage, AtomeseAtom, DEFAULT_OPENCOG_CONFIG } from "../types";
 
-export class OpenCogRuntime implements AssistantRuntime {
+export class OpenCogRuntime {
   private cogServer: CogServerClient;
   private translationService: BiDirectionalTranslationService;
   private config: OpenCogRuntimeConfig;
@@ -57,54 +50,7 @@ export class OpenCogRuntime implements AssistantRuntime {
     this.addSystemMessage("Disconnected from CogServer", "info");
   }
 
-  // AssistantRuntime interface implementation
-  thread: ThreadRuntimeCore = {
-    messages: [],
-    
-    getBranches: (messageId: string) => {
-      return [{ messageId, branchId: messageId }];
-    },
-
-    switchToBranch: (branchId: string) => {
-      // Implementation for branch switching
-    },
-
-    append: async (message: any) => {
-      await this.handleUserMessage(message);
-    },
-
-    subscribe: (callback: () => void): Unsubscribe => {
-      this.subscribers.add(callback);
-      return () => this.subscribers.delete(callback);
-    },
-
-    getState: () => ({
-      messages: this.convertToThreadMessages(),
-      isRunning: this.isRunning,
-      isDisabled: false
-    })
-  };
-
-  composer = {
-    getState: () => ({
-      text: "",
-      attachments: []
-    }),
-    
-    setText: (text: string) => {
-      // Implementation for setting composer text
-    },
-    
-    reset: () => {
-      // Implementation for resetting composer
-    },
-    
-    subscribe: (callback: () => void): Unsubscribe => {
-      return () => {}; // Placeholder
-    }
-  };
-
-  async handleUserMessage(message: UserMessage): Promise<void> {
+  async handleUserMessage(message: string): Promise<void> {
     this.isRunning = true;
     this.notifySubscribers();
 
@@ -112,7 +58,7 @@ export class OpenCogRuntime implements AssistantRuntime {
     const userMessage: OpenCogMessage = {
       id: this.generateId(),
       type: "user",
-      content: message.content[0]?.text || "",
+      content: message,
       timestamp: Date.now()
     };
     this.messages.push(userMessage);
@@ -298,25 +244,8 @@ export class OpenCogRuntime implements AssistantRuntime {
     this.notifySubscribers();
   }
 
-  private convertToThreadMessages(): ThreadMessage[] {
-    return this.messages.map(msg => {
-      if (msg.type === "user") {
-        return {
-          id: msg.id,
-          role: "user",
-          content: [{ type: "text", text: msg.content }],
-          createdAt: new Date(msg.timestamp)
-        } as UserMessage;
-      } else {
-        return {
-          id: msg.id,
-          role: "assistant", 
-          content: [{ type: "text", text: msg.content }],
-          createdAt: new Date(msg.timestamp),
-          status: { type: "complete" }
-        } as AssistantMessage;
-      }
-    });
+  getMessages(): OpenCogMessage[] {
+    return [...this.messages];
   }
 
   private notifySubscribers(): void {

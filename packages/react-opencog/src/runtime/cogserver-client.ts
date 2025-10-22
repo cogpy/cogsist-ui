@@ -1,10 +1,20 @@
 import { EventEmitter } from "events";
-import WebSocket from "ws";
+// For browser compatibility, we'll create a mock WebSocket interface
+interface WSLike {
+  readyState: number;
+  OPEN: number;
+  send(data: string): void;
+  close(): void;
+  onopen: (() => void) | null;
+  onmessage: ((event: { data: string }) => void) | null;
+  onclose: (() => void) | null;
+  onerror: ((error: any) => void) | null;
+}
 import { CogServerConfig, AtomeseAtom } from "../types";
 
 export class CogServerClient extends EventEmitter {
   private config: CogServerConfig;
-  private connection: WebSocket | null = null;
+  private connection: WSLike | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
@@ -18,25 +28,42 @@ export class CogServerClient extends EventEmitter {
     return new Promise((resolve, reject) => {
       try {
         const url = `ws://${this.config.host}:${this.config.port}`;
-        this.connection = new WebSocket(url);
+        // Create WebSocket-like interface for browser/node compatibility
+        if (typeof window !== "undefined" && window.WebSocket) {
+          this.connection = new window.WebSocket(url) as WSLike;
+        } else {
+          // Mock implementation for node environment
+          this.connection = {
+            readyState: 0,
+            OPEN: 1,
+            send: () => {},
+            close: () => {},
+            onopen: null,
+            onmessage: null,
+            onclose: null,
+            onerror: null
+          } as WSLike;
+          // Simulate connection failure in non-browser environment
+          setTimeout(() => this.connection?.onerror?.(new Error("No browser WebSocket available")), 100);
+        }
 
-        this.connection.on("open", () => {
+        this.connection.onopen = () => {
           console.log("Connected to CogServer");
           this.reconnectAttempts = 0;
           this.emit("connected");
           resolve();
-        });
+        };
 
-        this.connection.on("message", (data) => {
+        this.connection.onmessage = (event) => {
           try {
-            const message = JSON.parse(data.toString());
+            const message = JSON.parse(event.data);
             this.emit("message", message);
           } catch (error) {
             console.error("Failed to parse CogServer message:", error);
           }
-        });
+        };
 
-        this.connection.on("close", () => {
+        this.connection.onclose = () => {
           console.log("CogServer connection closed");
           this.emit("disconnected");
           
@@ -47,17 +74,17 @@ export class CogServerClient extends EventEmitter {
               this.connect().catch(console.error);
             }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts));
           }
-        });
+        };
 
-        this.connection.on("error", (error) => {
+        this.connection.onerror = (error) => {
           console.error("CogServer connection error:", error);
           this.emit("error", error);
           reject(error);
-        });
+        };
 
         // Connection timeout
         setTimeout(() => {
-          if (this.connection?.readyState !== WebSocket.OPEN) {
+          if (this.connection?.readyState !== this.connection?.OPEN) {
             this.connection?.close();
             reject(new Error("Connection timeout"));
           }
@@ -71,7 +98,7 @@ export class CogServerClient extends EventEmitter {
 
   async sendCommand(command: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      if (!this.connection || this.connection.readyState !== WebSocket.OPEN) {
+      if (!this.connection || this.connection.readyState !== this.connection.OPEN) {
         reject(new Error("Not connected to CogServer"));
         return;
       }
@@ -175,6 +202,6 @@ export class CogServerClient extends EventEmitter {
   }
 
   isConnected(): boolean {
-    return this.connection?.readyState === WebSocket.OPEN;
+    return this.connection?.readyState === this.connection?.OPEN;
   }
 }

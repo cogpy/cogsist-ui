@@ -35,7 +35,5 @@ export {
 // Re-export assistant-ui types for convenience
 export type {
   AssistantRuntime,
-  ThreadMessage,
-  AssistantMessage,
-  UserMessage
+  ThreadMessage
 } from "@assistant-ui/react";

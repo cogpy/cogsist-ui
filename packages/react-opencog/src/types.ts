@@ -1,14 +1,14 @@
 import { z } from "zod";
 
 // OpenCog Atomese types
-export const AtomeseAtomSchema = z.object({
+export const AtomeseAtomSchema: z.ZodType<AtomeseAtom> = z.object({
   type: z.string(),
   name: z.string().optional(),
   truthValue: z.object({
     strength: z.number(),
     confidence: z.number()
   }).optional(),
-  outgoing: z.array(z.lazy(() => AtomeseAtomSchema)).optional()
+  outgoing: z.array(z.lazy((): z.ZodType<AtomeseAtom> => AtomeseAtomSchema)).optional()
 });
 
 export type AtomeseAtom = z.infer<typeof AtomeseAtomSchema>;
