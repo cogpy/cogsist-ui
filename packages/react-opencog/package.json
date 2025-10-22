@@ -1,0 +1,83 @@
+{
+  "name": "@assistant-ui/react-opencog",
+  "description": "OpenCog integration for assistant-ui with Atomese translation",
+  "keywords": [
+    "opencog",
+    "atomese",
+    "cogserver", 
+    "natural-language",
+    "knowledge-representation",
+    "ai-chat",
+    "assistant",
+    "react",
+    "ui",
+    "chatbot",
+    "guile-shell",
+    "democratized-ui"
+  ],
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "source": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsx scripts/build.mts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@assistant-ui/react": "workspace:*",
+    "assistant-stream": "workspace:*",
+    "ws": "^8.18.0",
+    "zod": "^4.1.12"
+  },
+  "peerDependencies": {
+    "@types/react": "*",
+    "@types/react-dom": "*", 
+    "react": "^18 || ^19 || ^19.0.0-rc",
+    "react-dom": "^18 || ^19 || ^19.0.0-rc"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    },
+    "@types/react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@assistant-ui/x-buildutils": "workspace:*",
+    "@types/node": "^24.8.1",
+    "@types/ws": "^8.5.10",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.6",
+    "tsx": "^4.20.6",
+    "vitest": "^3.2.4"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "homepage": "https://www.assistant-ui.com/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/assistant-ui/assistant-ui/tree/main/packages/react-opencog"
+  },
+  "bugs": {
+    "url": "https://github.com/assistant-ui/assistant-ui/issues"
+  }
+}
